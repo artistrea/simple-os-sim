@@ -2,6 +2,7 @@ from simple_os.process.pcb import PCB, ProcState
 import simple_os.simulation_utils as utils
 from simple_os.process.process_manager import ProcessManager
 from simple_os.process.scheduler import Scheduler
+from simple_os.process.dispatcher import Dispatcher
 
 import argparse
 import sys
@@ -42,12 +43,8 @@ def simulate_os(
             continue
         exec_time, proc = proc_and_exec_time
 
-        print("proc.time_needed", proc.time_needed)
-        while exec_time > 0:
-            print(f"EXECUTING {proc.pid}, PC={proc.pc}, time_left={proc.time_left}")
-            exec_time -= 1
-            proc.pc += 1
-            proc.time_left -= 1
+        Dispatcher.dispatch(proc, exec_time)
+
         if proc.time_left == 0:
             # NOTE: terminate should also
             # check for blocked process that may be unblocked
@@ -86,8 +83,6 @@ def main():
         ops,
         initial_state,
     )
-
-    print("Hello from simple-os-sim!")
 
 
 if __name__ == "__main__":

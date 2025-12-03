@@ -1,21 +1,37 @@
 from simple_os.process.pcb import PCB, ProcState, ProcBlockedReason
+from simple_os.process.scheduler import Scheduler
+from simple_os.memory.MemoryManager import MemoryManager
+import typing
 
-class ProcessManager:
+class _ProcessManager:
     MAX_PROCS = 100
 
     def __init__(self, memory_manager, scheduler):
-        self.process_manager: list[typing.Optional[PCB]] = [None] * self.MAX_PROCS
+        self.process_table: list[typing.Optional[PCB]] = [None] * self.MAX_PROCS
         self.next_pid = 0
         self.scheduler = scheduler
+        scheduler.register_process_table(self.process_table)
         self.memory_manager = memory_manager
 
     def _add_pcb_to_table(self, pcb: PCB):
         i = 0
         # find first allocation space for process
-        while self.procs[i] is not None:
+        while self.process_table[i] is not None:
             i += 1
 
-        self.procs[i] = pcb
+        self.process_table[i] = pcb
+
+    def _free_pid_from_table(self, pid: int):
+        i = 0
+        # find first allocation space for process
+        while i < self.MAX_PROCS and (
+            self.process_table[i] is None or self.process_table[i].pid != pid
+        ):
+            i += 1
+        if i == self.MAX_PROCS:
+            raise ValueError("AOPA")
+
+        self.process_table[i] = None
 
     def create_process(self):
         # TODO: add args
@@ -52,10 +68,14 @@ class ProcessManager:
 
         self._add_pcb_to_table(pcb)
         if pcb.state == ProcState.READY:
-            self.scheduler.dispatch()
+            self.scheduler.dispatch(pcb)
 
         self.next_pid += 1
 
-    def terminate_process(pid: int):
+    def terminate_process(self, pid: int):
+        self._free_pid_from_table(pid)
+        # TODO: memory management blocked processes list
         pass
         # self.memo
+
+ProcessManager = _ProcessManager(MemoryManager, Scheduler)

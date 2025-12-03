@@ -1,6 +1,6 @@
 from simple_os.memory.Memory import Memory
 
-class MemoryManager:
+class _MemoryManager:
     def __init__(self):
         self.memory = Memory() # instancia Memory
 
@@ -44,3 +44,5 @@ class MemoryManager:
         for i in range(self.memory.total_blocks):
             if self.memory.blocks[i] == pid:
                 self.memory.blocks[i] = None
+
+MemoryManager = _MemoryManager()

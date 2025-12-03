@@ -16,20 +16,29 @@ class _Scheduler:
         5: 2,
     }
 
-    def __init__(self, process_manager: "ProcessManager"):
-        self.process_manager: list[typing.Optional[PCB]] = [None] * self.MAX_PROCS
+    def __init__(self):
         self.queues: list[list[int]] = [[] for _ in range(self.NUM_QUEUES)]
+        # uninitialized process table
+        self.process_table: list[typing.Optional[PCB]] = None
 
-    def add_proc(
+    def register_process_table(self, process_table: list[typing.Optional[PCB]]):
+        self.process_table = process_table
+
+    def dispatch(
         self,
-        pcb: PCB
+        pcb: PCB,
     ) -> int:
+        pass
+
+    def get_next_proc(self) -> (int, PCB):
         i = 0
-        # find first allocation space for process
-        while self.procs[i] is not None:
+
+        while i < self.MAX_PROCS and self.process_table[i] is None:
             i += 1
 
-        self.procs[i] = pcb
+        if i == self.MAX_PROCS:
+            return None
 
-    def get_next_proc(self):
-        return
+        return self.process_table[i].time_needed, self.process_table[i]
+
+Scheduler = _Scheduler()

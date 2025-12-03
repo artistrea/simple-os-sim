@@ -1,27 +1,12 @@
 from simple_os.process.pcb import PCB, ProcState
+import simple_os.simulation_utils as utils
+from simple_os.process.process_manager import ProcessManager
+from simple_os.process.scheduler import Scheduler
 
 import argparse
 import sys
-from dataclasses import dataclass
+
 from pathlib import Path
-
-@dataclass
-class DispatcherTimedList:
-    pass
-
-@dataclass
-class FileSystemState:
-    pass
-
-@dataclass
-class FileSystemOperations:
-    pass
-
-def parse_procs_decl(path: str):
-    return DispatcherTimedList()
-
-def parse_file_decl(path: str):
-    return FileSystemOperations(), FileSystemState()
 
 def get_next_proc():
     return PCB(
@@ -47,42 +32,51 @@ def get_next_proc():
     )
 
 def simulate_os(
-    dispatcher_timed_list: DispatcherTimedList,
-    filesystem_state: FileSystemState,
-    filesystem_operations: FileSystemOperations,
+    dispatcher_timed_list: utils.DispatcherTimedList,
+    filesystem_state: utils.FileSystemState,
+    filesystem_operations: utils.FileSystemOperations,
 ):
     # time for debugging purposes
     max_os_execution_time = sys.maxsize
     t = 0
     processes_left_to_run = dispatcher_timed_list.num_procs
 
-    while t < max_os_execution_time:
+    while (
+        # for DEBUGGING
+        t < max_os_execution_time and
+        processes_left_to_run > 0
+    ):
         # TODO: dispatch processes up to the current time
         just_arrived_procs_to_dispatch = dispatcher_timed_list.get_unfetched_procs_until(t)
+
         for proc in just_arrived_procs_to_dispatch:
             ProcessManager.create_process()
 
         # TODO: run scheduler to get next proc
-        proc, exec_time = Scheduler.get_next_proc()
+        proc_and_exec_time = Scheduler.get_next_proc()
+        if proc_and_exec_time is None:
+            t += 1
+            continue
+        exec_time, proc = proc_and_exec_time
 
+        print("proc.time_needed", proc.time_needed)
         while exec_time > 0:
+            print(f"EXECUTING {proc.pid}, PC={proc.pc}, time_left={proc.time_left}")
             exec_time -= 1
             proc.pc += 1
             proc.time_left -= 1
-
+        # exit()
         if proc.time_left == 0:
             # NOTE: terminate should also
             # check for blocked process that may be unblocked
-            ProcessManager.terminate_process(proc)
+            processes_left_to_run -= 1
+            ProcessManager.terminate_process(proc.pid)
 
         t += exec_time
 
 
 def main():
-    # for debugging purposes:
-    MAX_OS_EXEC_TIME = 10
     parser = argparse.ArgumentParser(description="TODO")
-    
 
     parser.add_argument(
         "--procs", "-p",
@@ -100,14 +94,15 @@ def main():
     print("args.files", args.files)
     print("args.procs", args.procs)
 
-    ops, initial_state = parse_file_decl(args.files)
-    dispatch_timed_list = parse_procs_decl(args.procs)
+    dispatch_timed_list = utils.parse_procs_decl(args.procs)
+    print("dispatch_timed_list._procs_to_be_dispatched", dispatch_timed_list._procs_to_be_dispatched)
+
+    ops, initial_state = utils.parse_file_decl(args.files)
 
     simulate_os(
         dispatch_timed_list,
         ops,
         initial_state,
-        MAX_OS_EXEC_TIME
     )
 
     print("Hello from simple-os-sim!")

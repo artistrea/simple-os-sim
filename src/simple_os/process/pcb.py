@@ -32,7 +32,7 @@ class PCB:
     pc: int
     # i/o status
     using_scanner: bool
-    using_printer: bool
+    requested_printer: int
     using_modem: bool
-    using_sata: bool
+    requested_sata: int
 

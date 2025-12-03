@@ -6,31 +6,6 @@ from simple_os.process.scheduler import Scheduler
 import argparse
 import sys
 
-from pathlib import Path
-
-def get_next_proc():
-    return PCB(
-        pid=0,
-        starting_priority=0,
-        time_needed=10,
-        is_preemptable=False,
-        # memory props
-        memory_needed=16,
-        memory_offset = None,
-        memory_num_allocated_blocks = None,
-        # scheduler and running props
-        time_left=10,
-        priority=0,
-        state=ProcState.READY,
-        blocked_reason=None,
-        pc=0,
-        # i/o status
-        using_scanner=False,
-        using_printer=False,
-        using_modem=False,
-        using_sata=False,
-    )
-
 def simulate_os(
     dispatcher_timed_list: utils.DispatcherTimedList,
     filesystem_state: utils.FileSystemState,
@@ -50,7 +25,15 @@ def simulate_os(
         just_arrived_procs_to_dispatch = dispatcher_timed_list.get_unfetched_procs_until(t)
 
         for proc in just_arrived_procs_to_dispatch:
-            ProcessManager.create_process()
+            ProcessManager.create_process(
+                proc.priority,
+                proc.execution_time,
+                proc.memory_needed,
+                proc.requested_printer,
+                proc.requested_scanner,
+                proc.requested_modem,
+                proc.requested_disk,
+            )
 
         # TODO: run scheduler to get next proc
         proc_and_exec_time = Scheduler.get_next_proc()

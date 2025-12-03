@@ -1,4 +1,5 @@
-from simple_os.process.pcb import PCB
+from simple_os.process.pcb import PCB, ProcState
+from simple_os.cpu import CPU
 from dataclasses import dataclass
 import typing
 
@@ -8,7 +9,7 @@ class _Scheduler:
     MAX_PROCS = 100
 
     QUANTUM_TABLE = {
-        0: None,  # tempo real, sem preempção
+        0: None,  # real time, no preempting
         1: 6,
         2: 5,
         3: 4,
@@ -17,9 +18,32 @@ class _Scheduler:
     }
 
     def __init__(self):
+        # the queues keep indices for process table lookup
         self.queues: list[list[int]] = [[] for _ in range(self.NUM_QUEUES)]
         # uninitialized process table
         self.process_table: list[typing.Optional[PCB]] = None
+        
+        # for aging
+        self.waiting_time = {}  # indice -> waiting time
+
+    def apply_aging(self, t: int):
+        """Makes processes higher priority depending on waiting time.
+        This prevents starvation.
+        """
+        for prio in range(2, 6):
+            updated_queue = []
+            for pid in self.queues[prio]:
+                self.waiting_time[pid] += t
+
+                if self.waiting_time[pid] >= 10 and prio > 1:
+                    pcb = self.process_table[pid]
+                    pcb.priority -= 1
+                    self.queues[prio - 1].append(pid)
+                    self.waiting_time[pid] = 0
+                else:
+                    updated_queue.append(pid)
+
+            self.queues[prio] = updated_queue
 
     def register_process_table(self, process_table: list[typing.Optional[PCB]]):
         self.process_table = process_table
@@ -28,17 +52,67 @@ class _Scheduler:
         self,
         pcb: PCB,
     ) -> int:
-        pass
+        assert pcb.state == ProcState.READY
+
+        assert 0 <= pcb.priority <= 5
+        self.queues[pcb.priority].append(pcb.pid)
+        self.waiting_time[pcb.pid] = 0
 
     def get_next_exec_time_and_proc(self) -> (int, PCB):
-        i = 0
+        if self.queues[0]:
+            pid = self.queues[0].pop(0)
+            pcb = self.process_table[pid]
 
-        while i < self.MAX_PROCS and self.process_table[i] is None:
-            i += 1
+            assert pcb.state == ProcState.READY
 
-        if i == self.MAX_PROCS:
-            return None
+            return pcb.time_left, pcb  # sem preempção
 
-        return self.process_table[i].time_needed, self.process_table[i]
+        for prio in range(1, 6):
+            if self.queues[prio]:
+                pid = self.queues[prio].pop(0)
+                pcb = self.process_table[pid]
+
+                assert pcb.state == ProcState.READY
+
+                quantum = self.QUANTUM_TABLE[prio]
+                self.waiting_time[pid] = 0
+
+                return quantum, pcb
+
+        return None, None
+
+    def requeue_after_execution(self, pcb: PCB):
+        """
+        Chamado pelo process manager depois que o PCB executou por um quantum.
+        Só realimenta se ainda não terminou.
+        """
+        if pcb.time_left <= 0:
+            return
+
+        if pcb.priority < 5:
+            pcb.priority += 1
+
+        self.add_ready_process(pcb)
+
+    def dispatch(self, proc: PCB, exec_time: int):
+        # TODO: check whose responsability this is
+        proc.state = ProcState.RUNNING
+        print()
+        print(f"""dispatcher =>
+    PID: {proc.pid}
+    offset: {proc.memory_offset}
+    blocks: {proc.memory_num_allocated_blocks}
+    priority: {proc.priority}
+    allocated_time: {exec_time}
+    time_left: {exec_time}
+    scanners: {0 if proc.using_scanner else 1}
+    printers: {proc.requested_printer}
+    modems: {0 if proc.using_modem else 1}
+    sata: {proc.requested_sata}"""
+        )
+        CPU.execute(proc, exec_time)
+
+        self.requeue_after_execution(proc)
+
 
 Scheduler = _Scheduler()

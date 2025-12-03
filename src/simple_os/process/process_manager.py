@@ -9,7 +9,6 @@ class _ProcessManager:
     def __init__(self, memory_manager, scheduler):
         self.process_table: list[typing.Optional[PCB]] = [None] * self.MAX_PROCS
         self.blocked_procs = []
-        self.next_pid = 0
         self.scheduler = scheduler
         scheduler.register_process_table(self.process_table)
         self.memory_manager = memory_manager
@@ -23,24 +22,15 @@ class _ProcessManager:
         return self.process_table[i]
 
     def _get_proc_table_idx(self, pid: int) -> int:
-        i = 0
-        # find first allocation space for process
-        while i < self.MAX_PROCS and (
-            self.process_table[i] is None or self.process_table[i].pid != pid
-        ):
-            i += 1
-
-        # TODO: remove this assertion
-        assert i != self.MAX_PROCS
-
-        return i
-
+        return pid
         
     def _add_pcb_to_table(self, pcb: PCB) -> int:
         i = 0
         # find first allocation space for process
         while self.process_table[i] is not None:
             i += 1
+
+        assert i != self.MAX_PROCS, "Cannot handle more than MAX_PROCS processes at the same time"
 
         self.process_table[i] = pcb
 
@@ -89,7 +79,7 @@ class _ProcessManager:
     ):
         # TODO: allocate resources
         pcb = PCB(
-            pid=self.next_pid,
+            pid=0,
             starting_priority=priority,
             time_needed=execution_time,
             is_preemptable=priority == 0,
@@ -109,16 +99,15 @@ class _ProcessManager:
             using_modem=requested_modem == 1,
             requested_sata=requested_disk,
         )
-        self.resolve_process_resource_requests(pcb)
+        actual_pid = self._add_pcb_to_table(pcb)
+        pcb.pid = actual_pid
 
-        self._add_pcb_to_table(pcb)
+        self.resolve_process_resource_requests(pcb)
 
         if pcb.state == ProcState.READY:
             self.scheduler.add_ready_process(pcb)
         else:
             self.blocked_procs.append(pcb.pid)
-
-        self.next_pid += 1
 
     def unblock_processes_when_possible(self):
         i = 0

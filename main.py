@@ -2,7 +2,6 @@ from simple_os.process.pcb import PCB, ProcState
 import simple_os.simulation_utils as utils
 from simple_os.process.process_manager import ProcessManager
 from simple_os.process.scheduler import Scheduler
-from simple_os.process.dispatcher import Dispatcher
 
 import argparse
 import sys
@@ -37,13 +36,13 @@ def simulate_os(
             )
 
         # TODO: run scheduler to get next proc
-        proc_and_exec_time = Scheduler.get_next_exec_time_and_proc()
-        if proc_and_exec_time is None:
+        exec_time, proc = Scheduler.get_next_exec_time_and_proc()
+
+        if proc is None:
             t += 1
             continue
-        exec_time, proc = proc_and_exec_time
 
-        Dispatcher.dispatch(proc, exec_time)
+        Scheduler.dispatch(proc, exec_time)
 
         if proc.time_left == 0:
             # NOTE: terminate should also

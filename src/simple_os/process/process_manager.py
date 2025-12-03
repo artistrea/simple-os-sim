@@ -17,7 +17,7 @@ class ProcessManager:
 
         self.procs[i] = pcb
 
-    def create_process(self) -> PCB:
+    def create_process(self):
         # TODO: add args
         # TODO: allocate memory
         # TODO: allocate resources
@@ -57,4 +57,5 @@ class ProcessManager:
         self.next_pid += 1
 
     def terminate_process(pid: int):
-        self.memo
+        pass
+        # self.memo

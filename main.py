@@ -50,20 +50,32 @@ def simulate_os(
     dispatcher_timed_list: DispatcherTimedList,
     filesystem_state: FileSystemState,
     filesystem_operations: FileSystemOperations,
-    max_os_execution_time: int = None,
 ):
-    if max_os_execution_time == None:
-        max_os_execution_time = sys.maxsize
-        print("max_os_execution_time", max_os_execution_time)
-
+    # time for debugging purposes
+    max_os_execution_time = sys.maxsize
     t = 0
+    processes_left_to_run = dispatcher_timed_list.num_procs
 
     while t < max_os_execution_time:
         # TODO: dispatch processes up to the current time
+        just_arrived_procs_to_dispatch = dispatcher_timed_list.get_unfetched_procs_until(t)
+        for proc in just_arrived_procs_to_dispatch:
+            ProcessManager.create_process()
+
         # TODO: run scheduler to get next proc
-        proc = get_next_proc()
-        # if 
-        t += 1
+        proc, exec_time = Scheduler.get_next_proc()
+
+        while exec_time > 0:
+            exec_time -= 1
+            proc.pc += 1
+            proc.time_left -= 1
+
+        if proc.time_left == 0:
+            # NOTE: terminate should also
+            # check for blocked process that may be unblocked
+            ProcessManager.terminate_process(proc)
+
+        t += exec_time
 
 
 def main():
@@ -89,7 +101,7 @@ def main():
     print("args.procs", args.procs)
 
     ops, initial_state = parse_file_decl(args.files)
-    dispatch_timed_list = parse_procs_decl(args.files)
+    dispatch_timed_list = parse_procs_decl(args.procs)
 
     simulate_os(
         dispatch_timed_list,

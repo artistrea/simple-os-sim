@@ -36,3 +36,12 @@ class PCB:
     using_modem: bool
     requested_sata: int
 
+    @property
+    def using_io(self):
+        return (
+            self.using_scanner
+            or self.using_modem
+            or self.requested_printer
+            or self.requested_sata
+        )
+

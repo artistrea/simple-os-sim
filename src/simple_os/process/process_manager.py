@@ -14,6 +14,14 @@ class _ProcessManager:
         scheduler.register_process_table(self.process_table)
         self.memory_manager = memory_manager
 
+    def _get_pcb(self, pid: int) -> PCB:
+        i = self._get_proc_table_idx(pid)
+
+        if i == self.MAX_PROCS:
+            return None
+
+        return self.process_table[i]
+
     def _get_proc_table_idx(self, pid: int) -> int:
         i = 0
         # find first allocation space for process
@@ -46,6 +54,29 @@ class _ProcessManager:
 
         self.process_table[i] = None
 
+    def resolve_process_resource_requests(
+        self, pcb: PCB
+    ):
+        """Allocates process resources when possible.
+        May update pcb state according to it.
+        This function may be rerun any number of time for the same process.
+        """
+        if pcb.memory_needed is not None:
+            # still has no memory
+            pcb.memory_offset = self.memory_manager.allocate(
+                pcb.pid, pcb.memory_needed, pcb.priority == 0
+            )
+            if pcb.memory_offset is None:
+                pcb.state = ProcState.BLOCKED
+                pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_MEM
+
+        if pcb.using_io:
+            # TODO: add I/O here
+            pass
+
+        pcb.state = ProcState.READY
+        pcb.blocked_reason = None
+        
     def create_process(
         self,
         priority: int,
@@ -78,13 +109,7 @@ class _ProcessManager:
             using_modem=requested_modem == 1,
             requested_sata=requested_disk,
         )
-        mem_offset = self.memory_manager.allocate(
-            pcb.pid, pcb.memory_needed, pcb.priority == 0
-        )
-        if mem_offset is None:
-            pcb.state = ProcState.BLOCKED
-            pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_MEM
-        # IO allocator
+        self.resolve_process_resource_requests(pcb)
 
         self._add_pcb_to_table(pcb)
 
@@ -95,11 +120,27 @@ class _ProcessManager:
 
         self.next_pid += 1
 
+    def unblock_processes_when_possible(self):
+        i = 0
+        # NOTE: we need while loop here since len(self.blocked_procs)
+        # needs to be reevaluated every loop
+        while i < len(self.blocked_procs):
+            pid = self.blocked_procs[i]
+            pcb = self._get_pcb(pid)
+
+            assert pcb is not None, "This should never happen"
+            assert pcb.blocked_reason is not None, "This should never happen"
+
+            self.resolve_process_resource_requests(pcb)
+
+            if pcb.state == ProcState.READY:
+                self.blocked_procs.pop(i)
+            else:
+                i += 1
+
     def terminate_process(self, pid: int):
         self._free_pid_from_table(pid)
         self.memory_manager.free(pid)
-        # TODO: memory management blocked processes list
-        pass
-        # self.memo
+        self.unblock_processes_when_possible()
 
 ProcessManager = _ProcessManager(MemoryManager, Scheduler)

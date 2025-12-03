@@ -24,13 +24,13 @@ class _Scheduler:
     def register_process_table(self, process_table: list[typing.Optional[PCB]]):
         self.process_table = process_table
 
-    def dispatch(
+    def add_ready_process(
         self,
         pcb: PCB,
     ) -> int:
         pass
 
-    def get_next_proc(self) -> (int, PCB):
+    def get_next_exec_time_and_proc(self) -> (int, PCB):
         i = 0
 
         while i < self.MAX_PROCS and self.process_table[i] is None:

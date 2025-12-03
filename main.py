@@ -7,24 +7,24 @@ import argparse
 import sys
 
 def simulate_os(
-    dispatcher_timed_list: utils.DispatcherTimedList,
+    to_be_created_procs_list: utils.ProcCreatedTimedList,
     filesystem_state: utils.FileSystemState,
     filesystem_operations: utils.FileSystemOperations,
 ):
     # time for debugging purposes
     max_os_execution_time = sys.maxsize
     t = 0
-    processes_left_to_run = dispatcher_timed_list.num_procs
+    processes_left_to_run = to_be_created_procs_list.num_procs
 
     while (
         # for DEBUGGING
         t < max_os_execution_time and
         processes_left_to_run > 0
     ):
-        # TODO: dispatch processes up to the current time
-        just_arrived_procs_to_dispatch = dispatcher_timed_list.get_unfetched_procs_until(t)
+        # TODO: create processes up to the current time
+        just_arrived_procs_to_create = to_be_created_procs_list.get_unfetched_procs_until(t)
 
-        for proc in just_arrived_procs_to_dispatch:
+        for proc in just_arrived_procs_to_create:
             ProcessManager.create_process(
                 proc.priority,
                 proc.execution_time,
@@ -36,7 +36,7 @@ def simulate_os(
             )
 
         # TODO: run scheduler to get next proc
-        proc_and_exec_time = Scheduler.get_next_proc()
+        proc_and_exec_time = Scheduler.get_next_exec_time_and_proc()
         if proc_and_exec_time is None:
             t += 1
             continue
@@ -48,7 +48,6 @@ def simulate_os(
             exec_time -= 1
             proc.pc += 1
             proc.time_left -= 1
-        # exit()
         if proc.time_left == 0:
             # NOTE: terminate should also
             # check for blocked process that may be unblocked
@@ -77,13 +76,13 @@ def main():
     print("args.files", args.files)
     print("args.procs", args.procs)
 
-    dispatch_timed_list = utils.parse_procs_decl(args.procs)
-    print("dispatch_timed_list._procs_to_be_dispatched", dispatch_timed_list._procs_to_be_dispatched)
+    to_be_created_list = utils.parse_procs_decl(args.procs)
+    print("to_be_created_list._procs_to_be_created", to_be_created_list._procs_to_be_created)
 
     ops, initial_state = utils.parse_file_decl(args.files)
 
     simulate_os(
-        dispatch_timed_list,
+        to_be_created_list,
         ops,
         initial_state,
     )

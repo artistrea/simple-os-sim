@@ -114,7 +114,7 @@ class _ProcessManager:
         self._add_pcb_to_table(pcb)
 
         if pcb.state == ProcState.READY:
-            self.scheduler.dispatch(pcb)
+            self.scheduler.add_ready_process(pcb)
         else:
             self.blocked_procs.append(pcb.pid)
 
@@ -135,7 +135,7 @@ class _ProcessManager:
 
             if pcb.state == ProcState.READY:
                 self.blocked_procs.pop(i)
-                self.scheduler.dispatch(pcb)
+                self.scheduler.add_ready_process(pcb)
             else:
                 i += 1
 

@@ -135,6 +135,7 @@ class _ProcessManager:
 
             if pcb.state == ProcState.READY:
                 self.blocked_procs.pop(i)
+                self.scheduler.dispatch(pcb)
             else:
                 i += 1
 

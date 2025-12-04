@@ -7,7 +7,7 @@ import typing
 class _ProcessManager:
     MAX_PROCS = 100
 
-    def __init__(self, memory_manager, scheduler):
+    def __init__(self, memory_manager, scheduler, resource_manager):
         self.process_table: list[typing.Optional[PCB]] = [None] * self.MAX_PROCS
         self.blocked_procs = []
         self.scheduler = scheduler
@@ -61,9 +61,16 @@ class _ProcessManager:
             if pcb.memory_offset is None:
                 pcb.state = ProcState.BLOCKED
                 pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_MEM
+                return
 
-        if pcb.using_scanner or pcb.requested_printer or pcb.using_modem or pcb.requested_sata:
-            ok, msg = self.resource_manager.request_resources(pcb.pid, pcb.requested_printer, pcb.using_scanner, pcb.using_modem, pcb.requested_sata)
+        if pcb.using_io:
+            ok, msg = self.resource_manager.request_resources(
+                pcb.pid,
+                pcb.requested_printer,
+                pcb.using_scanner,
+                pcb.using_modem,
+                pcb.requested_sata
+            )
             if not ok:
                 pcb.state = ProcState.BLOCKED
                 pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_IO
@@ -139,4 +146,4 @@ class _ProcessManager:
         self.resource_manager.release_resources(pid)
         self.unblock_processes_when_possible()
 
-ProcessManager = _ProcessManager(MemoryManager, Scheduler)
+ProcessManager = _ProcessManager(MemoryManager, Scheduler, ResourceManager)

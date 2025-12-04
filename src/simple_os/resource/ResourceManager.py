@@ -1,8 +1,4 @@
-# This Python file uses the following encoding: utf-8
-
-from typing import Optional, Dict, List, Tuple
-
-class ResourceManager:
+class _ResourceManager:
     def __init__(self): # inicializa 1 scanner, 2 impressoras, 1 modem e 3 SATA
         self.scanner = None # cada recurso associado a None ou a um PID
         self.printers = [None, None]
@@ -22,10 +18,10 @@ class ResourceManager:
             return False
 
     def request_resources(self, pid, printer_idx = None, need_scanner = False, need_modem = False, sata_idx = None): # aloca recurso
-        if need_scanner and self.scanner != None and self.scanner != pid: # checa impressora
+        if need_scanner and self.scanner is not None and self.scanner != pid: # checa impressora
             return False, f"Scanner busy (held by PID {self.scanner})"
 
-        if need_modem and self.modem != None and self.modem != pid: # checa modem
+        if need_modem and self.modem is not None and self.modem != pid: # checa modem
             return False, f"Modem busy (held by PID {self.modem})"
 
         if printer_idx == -1: # qualquer impressora disponível
@@ -38,14 +34,12 @@ class ResourceManager:
                 i = i + 1 # define índice da impressora
 
             if avail is None:
-                return False, f"todas impressoras ocupadas"
+                return False, "todas impressoras ocupadas"
             printer_idx = avail
 
-        elif printer_idx is not None:
-            if not (0 <= printer_idx < len(self.printers)):
-                return False, "index fora de alcance"
-            if self.printers[printer_idx] not in (None, pid):
-                return False, "impressora ocupada"
+        elif printer_idx is not None: # impressora específica
+            if not self._is_printer_free(printer_idx):
+                return False, "index fora de alcance ou impressora ocupada"
 
         if sata_idx == -1: # qualquer SATA disponível
             avail = None
@@ -57,12 +51,12 @@ class ResourceManager:
                 i = i + 1 # define índice de SATA
 
             if avail is None:
-                return False, f"todos dispositivos SATA ocupados"
+                return False, "todos dispositivos SATA ocupados"
             sata_idx = avail
 
-        elif sata_idx != None: # SATA específico
+        elif sata_idx is not None: # SATA específico
             if not self._is_sata_free(sata_idx):
-                return False, f"index fora de alcance ou SATA ocupado"
+                return False, "index fora de alcance ou SATA ocupado"
 
         if need_scanner:
             self.scanner = pid
@@ -70,10 +64,10 @@ class ResourceManager:
         if need_modem:
             self.modem = pid
 
-        if printer_idx != None:
+        if printer_idx is not None:
             self.printers[printer_idx] = pid
 
-        if sata_idx != None:
+        if sata_idx is not None:
             self.sata[sata_idx] = pid
 
         allocated_parts = []
@@ -83,10 +77,10 @@ class ResourceManager:
         if need_modem:
             allocated_parts.append("modem")
 
-        if printer_idx != None:
+        if printer_idx is not None:
             allocated_parts.append(f"printer[{printer_idx}]")
 
-        if sata_idx != None:
+        if sata_idx is not None:
             allocated_parts.append(f"sata[{sata_idx}]")
 
         msg = f"Recursos alocados ao PID {pid}: {', '.join(allocated_parts) if allocated_parts else 'none'}"
@@ -137,3 +131,5 @@ class ResourceManager:
 
     def __str__(self):
         return f"Scanner: {self.scanner}, Printers: {self.printers}, Modem: {self.modem}, SATA: {self.sata}"
+
+ResourceManager = _ResourceManager()

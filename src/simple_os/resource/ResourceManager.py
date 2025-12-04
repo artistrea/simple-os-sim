@@ -21,7 +21,7 @@ class ResourceManager:
         else:
             return False
 
-    def request_resources(self, pid, printer_idx = None, need_scanner = None, need_modem = None, sata_idx = None): # aloca recurso
+    def request_resources(self, pid, printer_idx = None, need_scanner = False, need_modem = False, sata_idx = None): # aloca recurso
         if need_scanner and self.scanner != None and self.scanner != pid: # checa impressora
             return False, f"Scanner busy (held by PID {self.scanner})"
 

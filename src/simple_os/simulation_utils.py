@@ -91,8 +91,6 @@ def parse_file_decl(path: str):
     # Add any explicit real-time processes (convention: process id 99 used for RT in examples)
     # and queue up operations in the manager as well as return the list.
     for op in operations:
-        if getattr(op, "process_id", None) == 99:
-            fs_manager.add_real_time_process(99)
         fs_manager.add_operation(op)
 
     # Return the raw operations list and the manager (main expects two values)

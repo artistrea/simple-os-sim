@@ -5,6 +5,7 @@ and managing real-time processes.
 """
 
 from typing import List, Dict, Any
+from simple_os.files.system import FileSystem
 
 
 class FileSystemManager:
@@ -12,13 +13,15 @@ class FileSystemManager:
     
     def __init__(self, total_blocks: int):
         """Initializes the file system manager"""
-        from system import FileSystem
         
         # Create file system
         self.system = FileSystem(total_blocks)
         
         # List of real-time processes
         self.real_time_processes = set()
+
+        # List of processes
+        self.processes = set()
         
         # Queue of operations to execute
         self.pending_operations = []
@@ -26,7 +29,12 @@ class FileSystemManager:
     def add_real_time_process(self, process_id: int):
         """Adds a process to the real-time process list"""
         self.real_time_processes.add(process_id)
-        self.system.set_real_time_process(process_id)
+        self.system.add_real_time_process(process_id)
+    
+    def add_process(self, process_id: int):
+        """Adds a process to the process list"""
+        self.processes.add(process_id)
+        self.system.add_process(process_id)
     
     def add_operation(self, operation):
         """Adds an operation to the execution queue"""
@@ -63,6 +71,7 @@ class FileSystemManager:
             'occupied_percent': (occupied_blocks / self.system.disk.total_blocks) * 100,
             'total_files': len(self.system.files),
             'real_time_processes': sorted(self.real_time_processes),
+            'processes': sorted(self.processes),
             'disk_state': disk_state,
             'files': {id: str(file) for id, file in self.system.files.items()}
         }
@@ -86,6 +95,9 @@ class FileSystemManager:
         
         if report['real_time_processes']:
             print(f"\nReal-time processes: {report['real_time_processes']}")
+
+        if report['processes']:
+            print(f"\nProcesses: {report['processes']}")
         
         if report['files']:
             print(f"\nFiles in system:")

@@ -5,6 +5,8 @@ Manages files, blocks, and process permissions.
 """
 
 from typing import List, Tuple, Optional
+from simple_os.files.disk import Disk
+from simple_os.files.file import File
 
 
 class FileSystem:
@@ -12,8 +14,7 @@ class FileSystem:
     
     def __init__(self, total_blocks: int):
         """Initializes the file system"""
-        from disk import Disk
-        
+
         # Create disk with specified number of blocks
         self.disk = Disk(total_blocks)
         
@@ -23,14 +24,22 @@ class FileSystem:
         
         # Set of real-time processes
         self.real_time_processes = set()
+
+        # Set of processes
+        self.processes = set()
         
         # Mapping for unique IDs (for internal control)
         self.next_id = 1
     
-    def set_real_time_process(self, process_id: int):
+    def add_real_time_process(self, process_id: int):
         """Marks a process as real-time"""
         self.real_time_processes.add(process_id)
         print(f"Process P{process_id} marked as real-time")
+
+    def add_process(self, process_id: int):
+        """Adds a process to the set of processes"""
+        self.processes.add(process_id)
+        print(f"Process P{process_id} added to the set of processes")
     
     def is_real_time_process(self, process_id: int) -> bool:
         """Checks if a process is real-time"""
@@ -73,6 +82,10 @@ class FileSystem:
             print(f"Error: ID '{file_id}' already in use")
             return False
         
+        if process_id not in self.processes and process_id not in self.real_time_processes:
+            print(f"Error: Process P{process_id} not found")
+            return False
+        
         # Find space using First-Fit algorithm
         start = self.first_fit(size_blocks)
         
@@ -82,7 +95,6 @@ class FileSystem:
             return False
         
         # Create File object
-        from file import File
         file = File(file_id, file_name, size_blocks, 
                    process_id, start)
         
@@ -138,29 +150,29 @@ class FileSystem:
         """Loads initial disk state"""
         print("Loading initial disk state...")
         
-        for file_id, start_block, size in initial_files:
+        file_id = 0
+        for file_name, start_block, size in initial_files:
             # Check if blocks are within disk
             if start_block + size > self.disk.total_blocks:
-                print(f"Error: File '{file_id}' exceeds disk size")
+                print(f"Error: File '{file_name}' exceeds disk size")
                 return False
             
             # Check if blocks are free
             for i in range(start_block, start_block + size):
                 if not self.disk.is_free(i):
-                    print(f"Error: Conflict at block {i} for file '{file_id}'")
+                    print(f"Error: Conflict at block {i} for file '{file_name}'")
                     return False
-            
-            # For initial files, assume owner process is 0
-            from file import File
-            file = File(file_id, f"file_{file_id}", 
+
+            file = File(file_id, file_name,
                        size, 0, start_block)
             
             # Occupy blocks
             for i in range(start_block, start_block + size):
-                self.disk.occupy_block(i, file_id)
+                self.disk.occupy_block(i, file_name)
             
             # Store file
-            self.files[file_id] = file
+            self.files[file_name] = file
+            i += 1
         
         print(f"Initial state loaded: {len(initial_files)} files")
         return True

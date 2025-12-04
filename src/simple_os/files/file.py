@@ -38,8 +38,8 @@ class FileOperation:
     """Represents an operation to be executed in the file system"""
     
     # Constants for operation types
-    CREATE = 1
-    DELETE = 2
+    CREATE = 0
+    DELETE = 1
     
     def __init__(self, process_id, operation_type, file_name, size=0, file_id=None):
         """Initializes a file operationInitializes a file operation"""

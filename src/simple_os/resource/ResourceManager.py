@@ -9,23 +9,23 @@ class ResourceManager:
         self.modem = None
         self.sata = [None, None, None]
 
-    def _is_printer_free(self, idx: int):
+    def _is_printer_free(self, idx):
         if ((0 <= idx < len(self.printers)) and (self.printers[idx] is None)):
             return True
         else:
             return False
 
-    def _is_sata_free(self, idx: int):
+    def _is_sata_free(self, idx):
         if ((0 <= idx < len(self.sata)) and (self.sata[idx] is None)):
             return True
         else:
             return False
 
-    def request_resources(self, pid: int, printer_idx = None, need_scanner: bool = False, need_modem: bool = False, sata_idx = None): # aloca recurso
-        if need_scanner and (self.scanner != None or self.scanner != pid): # checa impressora
+    def request_resources(self, pid, printer_idx = None, need_scanner = None, need_modem = None, sata_idx = None): # aloca recurso
+        if need_scanner and self.scanner != None and self.scanner != pid: # checa impressora
             return False, f"Scanner busy (held by PID {self.scanner})"
 
-        if need_modem and (self.modem != None or self.modem != pid): # checa modem
+        if need_modem and self.modem != None and self.modem != pid: # checa modem
             return False, f"Modem busy (held by PID {self.modem})"
 
         if printer_idx == -1: # qualquer impressora disponível
@@ -42,7 +42,7 @@ class ResourceManager:
             printer_idx = avail
 
         elif printer_idx != None: # impressora específica
-            if not _is_printer_free(printer_idx):
+            if not self._is_printer_free(printer_idx):
                 return False, f"index fora de alcance ou impressora ocupada"
 
         if sata_idx == -1: # qualquer SATA disponível
@@ -59,7 +59,7 @@ class ResourceManager:
             sata_idx = avail
 
         elif sata_idx != None: # SATA específico
-            if not _is_sata_free(sata_idx):
+            if not self._is_sata_free(sata_idx):
                 return False, f"index fora de alcance ou SATA ocupado"
 
         if need_scanner:
@@ -90,7 +90,7 @@ class ResourceManager:
         msg = f"Recursos alocados ao PID {pid}: {', '.join(allocated_parts) if allocated_parts else 'none'}"
         return True, msg
 
-    def release_resources(self, pid: int) -> Tuple[bool, str]: # libera recurso
+    def release_resources(self, pid): # libera recurso
         released = []
         if self.scanner == pid:
             self.scanner = None
@@ -101,6 +101,7 @@ class ResourceManager:
             if p == pid:
                 self.printers[i] = None
                 released.append(f"printer[{i}]")
+                break
             i = i + 1
 
         if self.modem == pid:
@@ -112,6 +113,7 @@ class ResourceManager:
             if d == pid:
                 self.sata[i] = None
                 released.append(f"sata[{i}]")
+                break
             i = i + 1
 
         if released:
@@ -119,13 +121,13 @@ class ResourceManager:
         else:
             return False, f"Nenhum recurso associado ao PID {pid}"
 
-    def release_printer(self, pid: int, idx: int) # libera impressora
+    def release_printer(self, pid, idx): # libera impressora
         if 0 <= idx < len(self.printers) and self.printers[idx] == pid:
             self.printers[idx] = None
             return True
         return False
 
-    def release_sata(self, pid: int, idx: int): # libera sata
+    def release_sata(self, pid, idx): # libera sata
         if 0 <= idx < len(self.sata) and self.sata[idx] == pid:
             self.sata[idx] = None
             return True

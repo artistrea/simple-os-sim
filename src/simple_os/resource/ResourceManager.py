@@ -41,9 +41,11 @@ class ResourceManager:
                 return False, f"todas impressoras ocupadas"
             printer_idx = avail
 
-        elif printer_idx != None: # impressora específica
-            if not self._is_printer_free(printer_idx):
-                return False, f"index fora de alcance ou impressora ocupada"
+        elif printer_idx is not None:
+            if not (0 <= printer_idx < len(self.printers)):
+                return False, "index fora de alcance"
+            if self.printers[printer_idx] not in (None, pid):
+                return False, "impressora ocupada"
 
         if sata_idx == -1: # qualquer SATA disponível
             avail = None

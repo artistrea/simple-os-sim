@@ -1,6 +1,7 @@
 from simple_os.process.pcb import PCB, ProcState, ProcBlockedReason
 from simple_os.process.scheduler import Scheduler
 from simple_os.memory.MemoryManager import MemoryManager
+from simple_os.resource.ResourceManager import ResourceManager
 import typing
 
 class _ProcessManager:
@@ -12,6 +13,7 @@ class _ProcessManager:
         self.scheduler = scheduler
         scheduler.register_process_table(self.process_table)
         self.memory_manager = memory_manager
+        self.resource_manager = resource_manager
 
     def _get_pcb(self, pid: int) -> PCB:
         i = self._get_proc_table_idx(pid)
@@ -60,9 +62,12 @@ class _ProcessManager:
                 pcb.state = ProcState.BLOCKED
                 pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_MEM
 
-        if pcb.using_io:
-            # TODO: add I/O here
-            pass
+        if pcb.using_scanner or pcb.requested_printer or pcb.using_modem or pcb.requested_sata:
+            ok, msg = self.resource_manager.request_resources(pcb.pid, pcb.requested_printer, pcb.using_scanner, pcb.using_modem, pcb.requested_sata)
+            if not ok:
+                pcb.state = ProcState.BLOCKED
+                pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_IO
+                return
 
         pcb.state = ProcState.READY
         pcb.blocked_reason = None

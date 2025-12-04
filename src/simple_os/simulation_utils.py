@@ -70,6 +70,30 @@ def parse_procs_decl(path: str):
     return to_be_created_list
 
 def parse_file_decl(path: str):
-    return FileSystemOperations(), FileSystemState()
+    # Use the input reader + filesystem manager to build state + ops
+    from .files.input_reader import InputReader
+    from .files.manager import FileSystemManager
+
+    data = InputReader.read_file(path)
+    if data is None:
+        raise FileNotFoundError(f"Could not parse file declaration: {path}")
+
+    total_blocks = data.get("total_blocks")
+    initial_files = data.get("initial_files", [])
+    operations = data.get("operations", [])
+
+    # Create a FileSystemManager and load initial state
+    fs_manager = FileSystemManager(total_blocks)
+    ok = fs_manager.load_initial_files(initial_files)
+    if not ok:
+        print("Warning: failed to load initial files into file system.")
+
+    # Add any explicit real-time processes (convention: process id 99 used for RT in examples)
+    # and queue up operations in the manager as well as return the list.
+    for op in operations:
+        fs_manager.add_operation(op)
+
+    # Return the raw operations list and the manager (main expects two values)
+    return operations, fs_manager
 
 

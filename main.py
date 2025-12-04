@@ -8,8 +8,8 @@ import sys
 
 def simulate_os(
     to_be_created_procs_list: utils.ProcCreatedTimedList,
-    filesystem_state: utils.FileSystemState,
-    filesystem_operations: utils.FileSystemOperations,
+    filesystem_state,  # FileSystemManager
+    filesystem_operations: list,  # List of file operations
 ):
     # time for debugging purposes
     max_os_execution_time = sys.maxsize
@@ -52,6 +52,22 @@ def simulate_os(
 
         t += exec_time
 
+    # After process simulation finishes, execute file system operations (if any)
+    try:
+        if filesystem_operations:
+            print("Sistema de arquivos =>")
+            for i in range(len(to_be_created_procs_list._procs_to_be_created)):
+                if to_be_created_procs_list._procs_to_be_created[i].priority == 0:
+                    filesystem_state.add_real_time_process(i)
+                else:
+                    filesystem_state.add_process(i)
+
+            filesystem_state.execute_all_operations()
+            filesystem_state.show_current_state()
+
+    except Exception as e:
+        print("File system integration error:", e)
+
 
 def main():
     parser = argparse.ArgumentParser(description="TODO")
@@ -75,12 +91,12 @@ def main():
     to_be_created_list = utils.parse_procs_decl(args.procs)
     print("to_be_created_list._procs_to_be_created", to_be_created_list._procs_to_be_created)
 
-    ops, initial_state = utils.parse_file_decl(args.files)
+    ops, fs_manager = utils.parse_file_decl(args.files)
 
     simulate_os(
         to_be_created_list,
+        fs_manager,
         ops,
-        initial_state,
     )
 
 

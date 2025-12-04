@@ -6,6 +6,7 @@ for the file system.
 
 import re
 from typing import List, Tuple, Dict, Any
+from simple_os.files.file import FileOperation
 
 
 class InputReader:
@@ -44,7 +45,7 @@ class InputReader:
             # Lines 3 to n+2: Occupied segments
             initial_files = []
             for i in range(2, 2 + n):
-                parts = clean_lines[i].split()
+                parts = clean_lines[i].split(", ")
                 if len(parts) != 3:
                     raise ValueError(f"Line {i+1}: Invalid format. Expected: file_id start_block size")
                 
@@ -69,6 +70,7 @@ class InputReader:
                 operation = InputReader.parse_operation_line(operation_line, i+1)
                 if operation:
                     operations.append(operation)
+
             
             # Check process IDs are sequential starting from 0
             process_ids = set(op.process_id for op in operations)
@@ -104,7 +106,7 @@ class InputReader:
         For creation: "process_id, 1, file_name, size"
         For deletion: "process_id, 2, file_name, file_id"
         """
-        from file import FileOperation
+        # Erro aqui
         
         try:
             # Remove spaces and split by comma
@@ -121,10 +123,10 @@ class InputReader:
             if process_id < 0:
                 raise ValueError(f"Line {line_number}: Process ID cannot be negative")
             
-            if operation_code not in [1, 2]:
-                raise ValueError(f"Line {line_number}: Invalid operation code (must be 1 or 2)")
+            if operation_code not in [0, 1]:
+                raise ValueError(f"Line {line_number}: Invalid operation code (must be 0 or 1)")
             
-            if operation_code == 1:  # Creation
+            if operation_code == 0:  # Creation = 0
                 if len(parts) != 4:
                     raise ValueError(f"Line {line_number}: Creation requires 4 fields")
                 size = int(parts[3])
@@ -132,10 +134,10 @@ class InputReader:
                     raise ValueError(f"Line {line_number}: Size must be positive")
                 return FileOperation(process_id, operation_code, file_name, size)
             
-            else:  # Deletion (code 2)
-                if len(parts) != 4:
-                    raise ValueError(f"Line {line_number}: Deletion requires 4 fields")
-                file_id = parts[3]
+            else:  # Deletion (code 1)
+                if len(parts) != 3:
+                    raise ValueError(f"Line {line_number}: Deletion requires 3 fields")
+                file_id = parts[2]
                 if not file_id.isalpha() or len(file_id) != 1:
                     raise ValueError(f"Line {line_number}: File ID must be a single letter")
                 return FileOperation(process_id, operation_code, file_name, file_id=file_id)
@@ -143,10 +145,10 @@ class InputReader:
         except ValueError as e:
             print(f"Error parsing line {line_number}: {e}")
             print(f"  Line: {line}")
-            return None
+            raise e
         except Exception as e:
             print(f"Unexpected error parsing line {line_number}: {e}")
-            return None
+            raise e
     
     @staticmethod
     def create_example_file():

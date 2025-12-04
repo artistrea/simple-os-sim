@@ -52,6 +52,21 @@ def simulate_os(
 
         t += exec_time
 
+    # After process simulation finishes, execute file system operations (if any)
+    try:
+        # filesystem_state is a FileSystemManager (see parse_file_decl)
+        if filesystem_operations:
+            # They were already added to the manager by parse_file_decl, but this
+            # ensures any remaining operations (or if parse_file_decl didn't add them)
+            for op in filesystem_operations:
+                filesystem_state.add_operation(op)
+
+        filesystem_state.execute_all_operations()
+        filesystem_state.show_current_state()
+
+    except Exception as e:
+        print("File system integration error:", e)
+
 
 def main():
     parser = argparse.ArgumentParser(description="TODO")
@@ -75,7 +90,7 @@ def main():
     to_be_created_list = utils.parse_procs_decl(args.procs)
     print("to_be_created_list._procs_to_be_created", to_be_created_list._procs_to_be_created)
 
-    ops, initial_state = utils.parse_file_decl(args.files)
+    ops, initial_state = utils.parse_file_decl("./files.txt")
 
     simulate_os(
         to_be_created_list,

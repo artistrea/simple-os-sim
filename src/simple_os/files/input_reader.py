@@ -14,6 +14,7 @@ class InputReader:
     @staticmethod
     def read_file(file_name: str) -> Dict[str, Any]:
         """Reads input file and returns structured data"""
+        print("chegou no file_system")
         try:
             with open(file_name, 'r') as file:
                 lines = file.readlines()
@@ -44,7 +45,7 @@ class InputReader:
             # Lines 3 to n+2: Occupied segments
             initial_files = []
             for i in range(2, 2 + n):
-                parts = clean_lines[i].split()
+                parts = clean_lines[i].split(", ")
                 if len(parts) != 3:
                     raise ValueError(f"Line {i+1}: Invalid format. Expected: file_id start_block size")
                 
@@ -69,6 +70,7 @@ class InputReader:
                 operation = InputReader.parse_operation_line(operation_line, i+1)
                 if operation:
                     operations.append(operation)
+
             
             # Check process IDs are sequential starting from 0
             process_ids = set(op.process_id for op in operations)
@@ -104,6 +106,7 @@ class InputReader:
         For creation: "process_id, 1, file_name, size"
         For deletion: "process_id, 2, file_name, file_id"
         """
+        # Erro aqui
         from file import FileOperation
         
         try:

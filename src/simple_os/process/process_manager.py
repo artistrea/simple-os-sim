@@ -136,6 +136,7 @@ class _ProcessManager:
     def terminate_process(self, pid: int):
         self._free_pid_from_table(pid)
         self.memory_manager.free(pid)
+        self.resource_manager.release_resources(pid)
         self.unblock_processes_when_possible()
 
 ProcessManager = _ProcessManager(MemoryManager, Scheduler)

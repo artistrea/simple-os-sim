@@ -149,7 +149,6 @@ class FileSystem:
     def load_initial_state(self, initial_files: List[Tuple]) -> bool:
         """Loads initial disk state"""
         print("Loading initial disk state...")
-        print(initial_files)
         file_id = 0
         for file_name, start_block, size in initial_files:
             # Check if blocks are within disk

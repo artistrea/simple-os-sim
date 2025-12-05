@@ -72,12 +72,6 @@ class _ProcessManager:
                 pcb.requested_sata
             )
             if not ok:
-                if "fora de alcance" in msg or "index" in msg:
-                    print(f"[KILL] Processo {pcb.pid} finalizado: {msg}")
-                    pcb.state = ProcState.EXIT
-                    self.resource_manager.release_resources(pcb.pid)
-                    return
-
                 pcb.state = ProcState.BLOCKED
                 pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_IO
                 return

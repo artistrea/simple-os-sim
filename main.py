@@ -72,7 +72,7 @@ def simulate_os(
     # After process simulation finishes, execute file system operations (if any)
     try:
         if filesystem_operations:
-            print("Sistema de arquivos =>")
+            print("Filesystem =>")
             for i in range(len(to_be_created_procs_list._procs_to_be_created)):
                 if to_be_created_procs_list._procs_to_be_created[i].priority == 0:
                     filesystem_state.add_real_time_process(i)
@@ -87,18 +87,18 @@ def simulate_os(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="TODO")
+    parser = argparse.ArgumentParser(description="OS Simulator")
 
     parser.add_argument(
         "--procs", "-p",
         type=str,
-        help="TODO",
+        help="File with definition of the processes that shall be run",
     )
 
     parser.add_argument(
         "--files", "-f",
         type=str,
-        help="TODO"
+        help="File with definition of filesystem start state and file operations"
     )
     args = parser.parse_args()
 

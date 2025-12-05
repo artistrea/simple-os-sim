@@ -17,50 +17,47 @@ class _ResourceManager:
         else:
             return False
 
-    def request_resources(self, pid, printer_idx = None, need_scanner = False, need_modem = False, sata_idx = None): # aloca recurso
+    def request_resources(self, pid, need_printer = False, need_scanner = False, need_modem = False, need_sata = False): # aloca recurso
         if need_scanner and self.scanner is not None and self.scanner is not pid: # checa impressora
             return False, f"Scanner busy (held by PID {self.scanner})"
 
         if need_modem and self.modem is not None and self.modem is not pid: # checa modem
             return False, f"Modem busy (held by PID {self.modem})"
 
-        if printer_idx == -1: # qualquer impressora disponível
+        printer_idx = None
+        if need_printer: # qualquer impressora disponível
             avail = None
             i = 0
+            already_has = False
             for p in self.printers: # busca primeira impressora disponível
                 if p is None:
                     avail = i
-                    break
-                i = i + 1 # define índice da impressora
-
-            if avail is None:
+                if p == pid:
+                    already_has = True
+                i = i + 1
+            if already_has:
+                pass
+            elif avail is None:
                 return False, "todas impressoras ocupadas"
             printer_idx = avail
 
-        elif printer_idx is not None:
-            if not (0 <= printer_idx < len(self.printers)):
-                return False, "index fora de alcance"
-            if self.printers[printer_idx] not in (None, pid):
-                return False, "impressora ocupada"
-
-        if sata_idx == -1: # qualquer SATA disponível
+        sata_idx = None
+        if need_sata: # qualquer SATA disponível
             avail = None
+            already_has = False
             i = 0
             for p in self.sata: # busca primeiro SATA disponível
                 if p is None:
                     avail = i
-                    break
+                if p == pid:
+                    already_has = True
                 i = i + 1 # define índice de SATA
-
-            if avail is None:
+            if already_has:
+                pass
+            elif avail is None:
                 return False, "todos dispositivos SATA ocupados"
-            sata_idx = avail
 
-        elif sata_idx is not None:
-            if not (0 <= sata_idx < len(self.sata)):
-                return False, "index fora de alcance"
-            if self.sata[sata_idx] not in (None, pid):
-                return False, "SATA ocupado"
+            sata_idx = avail
 
         if need_scanner:
             self.scanner = pid

@@ -6,7 +6,7 @@ Utilizar python e pip. Python 3.11 foi a versão específica utilizada no desenv
 É indicado que inicie um ambiente virtual python (venv):
 
 ```
-pip -m venv .venv
+python -m venv .venv
 ```
 
 ative-o

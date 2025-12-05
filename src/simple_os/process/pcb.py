@@ -6,6 +6,7 @@ class ProcState(Enum):
     READY = auto()
     BLOCKED = auto()
     RUNNING = auto()
+    EXIT = auto()
 
 
 class ProcBlockedReason(Enum):

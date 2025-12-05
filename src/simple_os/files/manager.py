@@ -86,7 +86,7 @@ class FileSystemManager:
         
         report = self.get_report()
         
-        print(f"\nDisk Configuration:")
+        print("\nDisk Configuration:")
         print(f"  • Total blocks: {report['total_blocks']}")
         print(f"  • Free blocks: {report['free_blocks']}")
         print(f"  • Occupied blocks: {report['occupied_blocks']} "
@@ -100,7 +100,7 @@ class FileSystemManager:
             print(f"\nProcesses: {report['processes']}")
         
         if report['files']:
-            print(f"\nFiles in system:")
+            print("\nFiles in system:")
             for file_id, info in report['files'].items():
                 print(f"  • {info}")
         

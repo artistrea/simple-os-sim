@@ -1,4 +1,3 @@
-import pytest
 from ResourceManager import _ResourceManager
 
 # Helpers

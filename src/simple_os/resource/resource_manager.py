@@ -34,7 +34,7 @@ class _ResourceManager:
                 i = i + 1 # define índice da impressora
 
             if avail is None:
-                return False, f"todas impressoras ocupadas"
+                return False, "todas impressoras ocupadas"
             printer_idx = avail
 
         elif printer_idx is not None:
@@ -53,7 +53,7 @@ class _ResourceManager:
                 i = i + 1 # define índice de SATA
 
             if avail is None:
-                return False, f"todos dispositivos SATA ocupados"
+                return False, "todos dispositivos SATA ocupados"
             sata_idx = avail
 
         elif sata_idx is not None:
@@ -68,10 +68,10 @@ class _ResourceManager:
         if need_modem:
             self.modem = pid
 
-        if printer_idx != None:
+        if printer_idx is not None:
             self.printers[printer_idx] = pid
 
-        if sata_idx != None:
+        if sata_idx is not None:
             self.sata[sata_idx] = pid
 
         allocated_parts = []
@@ -81,10 +81,10 @@ class _ResourceManager:
         if need_modem:
             allocated_parts.append("modem")
 
-        if printer_idx != None:
+        if printer_idx is not None:
             allocated_parts.append(f"printer[{printer_idx}]")
 
-        if sata_idx != None:
+        if sata_idx is not None:
             allocated_parts.append(f"sata[{sata_idx}]")
 
         msg = f"Recursos alocados ao PID {pid}: {', '.join(allocated_parts) if allocated_parts else 'none'}"

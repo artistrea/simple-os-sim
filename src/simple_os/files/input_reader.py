@@ -4,8 +4,7 @@ Interprets the specified format and prepares data
 for the file system.
 """
 
-import re
-from typing import List, Tuple, Dict, Any
+from typing import Dict, Any
 from simple_os.files.file import FileOperation
 
 
@@ -78,7 +77,7 @@ class InputReader:
                 max_id = max(process_ids)
                 expected = set(range(max_id + 1))
                 if not process_ids.issubset(expected):
-                    print(f"Warning: Process IDs are not sequential starting from 0")
+                    print("Warning: Process IDs are not sequential starting from 0")
             
             return {
                 'total_blocks': total_blocks,

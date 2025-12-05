@@ -140,9 +140,12 @@ class _ProcessManager:
                 i += 1
 
     def terminate_process(self, pid: int):
-        self._free_pid_from_table(pid)
+        if pid in self.blocked_procs:
+            self.blocked_procs = [id for id in self.blocked_procs if id != pid]
+
         self.memory_manager.free(pid)
         self.resource_manager.release_resources(pid)
+        self._free_pid_from_table(pid)
         self.unblock_processes_when_possible()
 
 ProcessManager = _ProcessManager(

@@ -1,10 +1,8 @@
-from simple_os.process.pcb import PCB, ProcState
 import simple_os.simulation_utils as utils
 from simple_os.process.process_manager import ProcessManager
 from simple_os.process.scheduler import Scheduler
 
 import argparse
-import sys
 
 def simulate_os(
     to_be_created_procs_list: utils.ProcCreatedTimedList,

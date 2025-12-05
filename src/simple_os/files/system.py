@@ -4,7 +4,7 @@ Implements contiguous allocation with First-Fit algorithm.
 Manages files, blocks, and process permissions.
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 from simple_os.files.disk import Disk
 from simple_os.files.file import File
 

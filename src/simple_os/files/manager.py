@@ -105,3 +105,5 @@ class FileSystemManager:
                 print(f"  • {info}")
         
         print("="*60)
+
+        self.system.generate_disk_map()

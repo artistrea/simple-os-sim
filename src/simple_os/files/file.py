@@ -8,7 +8,7 @@ class File:
     
     def __init__(self, file_id, name, size, owner_process, start_block):
         """Initializes a new file"""
-        self.id = file_id  # File identifier (a single letter)
+        self.id = file_id  # File identifier (starts from 0)
         self.name = name  # File name
         self.size = size  # Size in blocks
         self.owner_process = owner_process  # Process that created the file

@@ -35,7 +35,7 @@ class _Scheduler:
             for pid in self.queues[prio]:
                 self.waiting_time[pid] += t
 
-                if self.waiting_time[pid] >= 10 and prio > 1:
+                if self.waiting_time[pid] >= 20 and prio > 1:
                     pcb = self.process_table[pid]
                     pcb.priority -= 1
                     self.queues[prio - 1].append(pid)
@@ -77,7 +77,7 @@ class _Scheduler:
                 quantum = self.QUANTUM_TABLE[prio]
                 self.waiting_time[pid] = 0
 
-                return quantum, pcb
+                return min(quantum, pcb.time_left), pcb
 
         return None, None
 
@@ -94,8 +94,7 @@ class _Scheduler:
 
         self.add_ready_process(pcb)
 
-    def dispatch(self, proc: PCB, exec_time: int):
-        # TODO: check whose responsability this is
+    def dispatch(self, proc: PCB, exec_time: int, interrupted_at: int):
         proc.state = ProcState.RUNNING
         print()
         print(f"""dispatcher =>
@@ -103,15 +102,17 @@ class _Scheduler:
     offset: {proc.memory_offset}
     blocks: {proc.memory_num_allocated_blocks}
     priority: {proc.priority}
+    priority: {proc.starting_priority}
     allocated_time: {exec_time}
-    time_left: {exec_time}
+    time_left: {proc.time_left}
     scanners: {0 if proc.using_scanner else 1}
     printers: {proc.requested_printer}
     modems: {0 if proc.using_modem else 1}
     sata: {proc.requested_sata}"""
         )
-        CPU.execute(proc, exec_time)
-
+        CPU.execute(proc, exec_time, interrupted_at)
+        proc.state = ProcState.READY
+        self.apply_aging(interrupted_at)
         self.requeue_after_execution(proc)
 
 

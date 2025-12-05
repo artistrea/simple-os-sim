@@ -41,8 +41,8 @@ class _ProcessManager:
     def _free_pid_from_table(self, pid: int):
         i = self._get_proc_table_idx(pid)
 
-        # TODO: add error instead of assertion
-        assert i != self.MAX_PROCS
+        if i == self.MAX_PROCS:
+            raise ValueError("Tried freeing non existent process")
 
         self.process_table[i] = None
 
@@ -89,7 +89,6 @@ class _ProcessManager:
         requested_modem: int,
         requested_disk: int,
     ):
-        # TODO: allocate resources
         pcb = PCB(
             pid=0,
             starting_priority=priority,
@@ -101,7 +100,7 @@ class _ProcessManager:
             memory_num_allocated_blocks=memory_needed,
             # scheduler and running props
             time_left=execution_time,
-            priority=0,
+            priority=priority,
             state=ProcState.READY,
             blocked_reason=None,
             pc=0,
@@ -146,4 +145,8 @@ class _ProcessManager:
         self.resource_manager.release_resources(pid)
         self.unblock_processes_when_possible()
 
-ProcessManager = _ProcessManager(MemoryManager, Scheduler, ResourceManager)
+ProcessManager = _ProcessManager(
+    MemoryManager,
+    Scheduler,
+    ResourceManager
+)

@@ -12,16 +12,14 @@ def simulate_os(
     filesystem_operations: list,  # List of file operations
 ):
     # time for debugging purposes
-    max_os_execution_time = sys.maxsize
+    max_os_execution_time = 1e8
     t = 0
     processes_left_to_run = to_be_created_procs_list.num_procs
 
     while (
-        # for DEBUGGING
         t < max_os_execution_time and
         processes_left_to_run > 0
     ):
-        # TODO: create processes up to the current time
         just_arrived_procs_to_create = to_be_created_procs_list.get_unfetched_procs_until(t)
 
         for proc in just_arrived_procs_to_create:
@@ -35,22 +33,43 @@ def simulate_os(
                 proc.requested_disk,
             )
 
-        # TODO: run scheduler to get next proc
         exec_time, proc = Scheduler.get_next_exec_time_and_proc()
-
+        interrupted_at = 0
+        interrupted = False
         if proc is None:
             t += 1
             continue
 
-        Scheduler.dispatch(proc, exec_time)
+        while not interrupted and interrupted_at < exec_time:
+            interrupted_at += 1
+            just_arrived_procs_to_create = to_be_created_procs_list.get_unfetched_procs_until(
+                t + interrupted_at
+            )
+
+            for just_arrived_proc in just_arrived_procs_to_create:
+                ProcessManager.create_process(
+                    just_arrived_proc.priority,
+                    just_arrived_proc.execution_time,
+                    just_arrived_proc.memory_needed,
+                    just_arrived_proc.requested_printer,
+                    just_arrived_proc.requested_scanner,
+                    just_arrived_proc.requested_modem,
+                    just_arrived_proc.requested_disk,
+                )
+                if just_arrived_proc.priority < proc.priority:
+                    # current process just got interrupted
+                    interrupted = True
+                    break
+
+        t += interrupted_at
+
+        Scheduler.dispatch(proc, exec_time, interrupted_at)
 
         if proc.time_left == 0:
             # NOTE: terminate should also
             # check for blocked process that may be unblocked
             processes_left_to_run -= 1
             ProcessManager.terminate_process(proc.pid)
-
-        t += exec_time
 
     # After process simulation finishes, execute file system operations (if any)
     try:
@@ -85,11 +104,7 @@ def main():
     )
     args = parser.parse_args()
 
-    print("args.files", args.files)
-    print("args.procs", args.procs)
-
     to_be_created_list = utils.parse_procs_decl(args.procs)
-    print("to_be_created_list._procs_to_be_created", to_be_created_list._procs_to_be_created)
 
     ops, fs_manager = utils.parse_file_decl(args.files)
 

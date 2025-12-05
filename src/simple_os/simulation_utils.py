@@ -25,7 +25,7 @@ class ProcCreatedTimedList:
         i = 0
         while (
             i < self.num_procs and
-            item.created_at <= self._procs_to_be_created[i].created_at
+            item.created_at >= self._procs_to_be_created[i].created_at
         ):
             i += 1
         self._procs_to_be_created.insert(i, item)
@@ -52,10 +52,12 @@ class FileSystemOperations:
     pass
 
 def parse_procs_decl(path: str):
+    print("Parsing processes to create...")
+
     to_be_created_list = ProcCreatedTimedList()
     with open(path, "r") as f:
         for line in f:
-            if len(line) == 0:
+            if len(line.strip()) == 0:
                 continue
             try:
                 to_be_created_list.append(
@@ -66,6 +68,8 @@ def parse_procs_decl(path: str):
             except Exception as e:
                 print(f"Could not parse processes file {path}")
                 raise e
+
+    print(f"Initial state loaded: {to_be_created_list.num_procs} processes to be created during simulation")
 
     return to_be_created_list
 

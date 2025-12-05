@@ -1,4 +1,4 @@
-class ResourceManager:
+class _ResourceManager:
     def __init__(self): # inicializa 1 scanner, 2 impressoras, 1 modem e 3 SATA
         self.scanner = None # cada recurso associado a None ou a um PID
         self.printers = [None, None]
@@ -18,10 +18,10 @@ class ResourceManager:
             return False
 
     def request_resources(self, pid, printer_idx = None, need_scanner = False, need_modem = False, sata_idx = None): # aloca recurso
-        if need_scanner and self.scanner != None and self.scanner != pid: # checa impressora
+        if need_scanner and self.scanner is not None and self.scanner is not pid: # checa impressora
             return False, f"Scanner busy (held by PID {self.scanner})"
 
-        if need_modem and self.modem != None and self.modem != pid: # checa modem
+        if need_modem and self.modem is not None and self.modem is not pid: # checa modem
             return False, f"Modem busy (held by PID {self.modem})"
 
         if printer_idx == -1: # qualquer impressora disponível
@@ -135,3 +135,5 @@ class ResourceManager:
 
     def __str__(self):
         return f"Scanner: {self.scanner}, Printers: {self.printers}, Modem: {self.modem}, SATA: {self.sata}"
+
+ResourceManager = _ResourceManager()

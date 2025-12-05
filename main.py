@@ -12,11 +12,11 @@ def simulate_os(
     # time for debugging purposes
     max_os_execution_time = 1e8
     t = 0
-    processes_left_to_run = to_be_created_procs_list.num_procs
 
     while (
         t < max_os_execution_time and
-        processes_left_to_run > 0
+        (to_be_created_procs_list.num_unfetched_procs > 0 or
+        ProcessManager.existing_processes > 0)
     ):
         just_arrived_procs_to_create = to_be_created_procs_list.get_unfetched_procs_until(t)
 
@@ -64,9 +64,6 @@ def simulate_os(
         Scheduler.dispatch(proc, exec_time, interrupted_at)
 
         if proc.time_left == 0:
-            # NOTE: terminate should also
-            # check for blocked process that may be unblocked
-            processes_left_to_run -= 1
             ProcessManager.terminate_process(proc.pid)
 
     # After process simulation finishes, execute file system operations (if any)

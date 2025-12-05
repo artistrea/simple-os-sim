@@ -16,7 +16,7 @@ class ProcToBeDispathed:
 class ProcCreatedTimedList:
     # sorted by created_at list of processes to be created
     _procs_to_be_created: list[ProcToBeDispathed] = field(default_factory=list)
-    created_until_idx: int = 0
+    fetched_until_idx: int = 0
 
     def append(self, item: ProcToBeDispathed):
         # stable sorted insert into procs to be created
@@ -34,14 +34,18 @@ class ProcCreatedTimedList:
     def num_procs(self):
         return len(self._procs_to_be_created)
 
+    @property
+    def num_unfetched_procs(self):
+        return len(self._procs_to_be_created) - self.fetched_until_idx
+
     def get_unfetched_procs_until(self, t: int):
-        start = self.created_until_idx
+        start = self.fetched_until_idx
         while (
-            self.created_until_idx < self.num_procs and
-            self._procs_to_be_created[self.created_until_idx].created_at <= t
+            self.fetched_until_idx < self.num_procs and
+            self._procs_to_be_created[self.fetched_until_idx].created_at <= t
         ):
-            self.created_until_idx += 1
-        return self._procs_to_be_created[start:self.created_until_idx]
+            self.fetched_until_idx += 1
+        return self._procs_to_be_created[start:self.fetched_until_idx]
 
 @dataclass
 class FileSystemState:

@@ -11,6 +11,7 @@ class ProcState(Enum):
 
 class ProcBlockedReason(Enum):
     WAITING_FOR_MEM = auto()
+    TOO_LARGE_MEM_REQUEST = auto()
     WAITING_FOR_IO = auto()
     # ...
 
@@ -21,6 +22,7 @@ class PCB:
     starting_priority: int
     time_needed: int
     is_preemptable: bool
+    marked_for_termination: bool
     # memory props
     memory_needed: int
     memory_offset: typing.Optional[int]

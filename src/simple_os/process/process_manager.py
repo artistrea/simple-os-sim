@@ -14,6 +14,8 @@ class _ProcessManager:
         scheduler.register_process_table(self.process_table)
         self.memory_manager = memory_manager
         self.resource_manager = resource_manager
+        self.next_pid = 0
+        self.existing_processes = 0
 
     def _get_pcb(self, pid: int) -> PCB:
         i = self._get_proc_table_idx(pid)
@@ -27,10 +29,13 @@ class _ProcessManager:
         return pid
         
     def _add_pcb_to_table(self, pcb: PCB) -> int:
-        i = 0
+        i = self.next_pid
+        self.next_pid += 1
         # find first allocation space for process
         while self.process_table[i] is not None:
             i += 1
+            if i == self.MAX_PROCS:
+                i = 0
 
         assert i != self.MAX_PROCS, "Cannot handle more than MAX_PROCS processes at the same time"
 
@@ -55,16 +60,21 @@ class _ProcessManager:
         """
         if pcb.memory_needed is not None:
             # still has no memory
-            pcb.memory_offset = self.memory_manager.allocate(
+            status_code, pcb.memory_offset = self.memory_manager.allocate(
                 pcb.pid, pcb.memory_needed, pcb.priority == 0
             )
-            if pcb.memory_offset is None:
+            if status_code != 0:
+                if status_code == 2:
+                    pcb.marked_for_termination = True
+                    pcb.blocked_reason = ProcBlockedReason.TOO_LARGE_MEM_REQUEST
+                    return
+
                 pcb.state = ProcState.BLOCKED
                 pcb.blocked_reason = ProcBlockedReason.WAITING_FOR_MEM
                 return
 
         if pcb.using_io:
-            ok, msg = self.resource_manager.request_resources(
+            ok, _ = self.resource_manager.request_resources(
                 pcb.pid,
                 pcb.requested_printer,
                 pcb.using_scanner,
@@ -89,8 +99,10 @@ class _ProcessManager:
         requested_modem: int,
         requested_disk: int,
     ):
+        self.existing_processes += 1
         pcb = PCB(
-            pid=0,
+            pid=None,
+            marked_for_termination=False,
             starting_priority=priority,
             time_needed=execution_time,
             is_preemptable=priority == 0,
@@ -114,8 +126,10 @@ class _ProcessManager:
         pcb.pid = actual_pid
 
         self.resolve_process_resource_requests(pcb)
-
-        if pcb.state == ProcState.READY:
+        if pcb.marked_for_termination:
+            print(f"P{pcb.pid} terminated for {pcb.blocked_reason}")
+            self.terminate_process(pcb.pid)
+        elif pcb.state == ProcState.READY:
             self.scheduler.add_ready_process(pcb)
         else:
             self.blocked_procs.append(pcb.pid)
@@ -136,10 +150,15 @@ class _ProcessManager:
             if pcb.state == ProcState.READY:
                 self.blocked_procs.pop(i)
                 self.scheduler.add_ready_process(pcb)
+            elif pcb.marked_for_termination:
+                self.blocked_procs.pop(i)
+                print(f"P{pcb.pid} terminated for {pcb.blocked_reason}")
+                self.terminate_process(pcb.pid)
             else:
                 i += 1
 
     def terminate_process(self, pid: int):
+        self.existing_processes -= 1
         if pid in self.blocked_procs:
             self.blocked_procs = [id for id in self.blocked_procs if id != pid]
 

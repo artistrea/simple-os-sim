@@ -1,4 +1,5 @@
 from simple_os.memory.memory import Memory
+import typing
 
 class _MemoryManager:
     def __init__(self):
@@ -22,7 +23,10 @@ class _MemoryManager:
 
         return -1
 
-    def allocate(self, pid, size, is_real_time = False): # aloca memória ao processo
+    def allocate(self, pid, size, is_real_time = False) -> typing.Tuple[int, typing.Optional[int]]:
+        """Allocates memory for a process.
+        Returns a tuple (status_code, offset).
+        """
         if is_real_time:
             start = 0
             end = 64
@@ -30,15 +34,18 @@ class _MemoryManager:
             start = 64
             end = 1024
 
+        if size > (end - start):
+            return 2, None
+
         offset = self.find_contiguous_space(start, end, size)
 
         if offset == -1:
-            return None
+            return 1, None
 
         for i in range(offset, offset + size):
             self.memory.blocks[i] = pid # associa bloco de memória a um PID
 
-        return offset
+        return 0, offset
 
     def free(self, pid): # libera memória do processo
         for i in range(self.memory.total_blocks):

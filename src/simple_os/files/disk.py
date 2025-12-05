@@ -59,11 +59,11 @@ class Disk:
         block = self.get_block(index)
         return block is not None and block.file_name == '0'
     
-    def occupy_block(self, index, file_id):
+    def occupy_block(self, index, file_name):
         """Occupies a specific block with a file"""
         block = self.get_block(index)
         if block:
-            return block.occupy(file_id)
+            return block.occupy(file_name)
         return False
     
     def free_block(self, index):

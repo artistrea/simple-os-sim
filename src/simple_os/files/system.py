@@ -100,7 +100,7 @@ class FileSystem:
         
         # Occupy blocks on disk
         for i in range(start, start + size_blocks):
-            if not self.disk.occupy_block(i, file_id):
+            if not self.disk.occupy_block(i, file_name):
                 # If fails, free already allocated blocks
                 for j in range(start, i):
                     self.disk.free_block(j)
@@ -108,7 +108,7 @@ class FileSystem:
                 return False
         
         # Store file in system
-        self.files[file_id] = file
+        self.files[file_name] = file
         
         print(f"Success: File '{file_name}' (ID: {file_id}) created "
               f"by process P{process_id}")

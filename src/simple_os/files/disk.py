@@ -7,27 +7,31 @@ The entire disk is represented as a collection of blocks.
 class DiskBlock:
     """Represents an individual disk block"""
     
-    def __init__(self, index, file_id='0'):
+    def __init__(self, index, file_name='0'):
         """Initializes a disk block"""
         self.index = index  # Block position in the disk
-        self.file_id = file_id  # '0' = free block, letter = file occupying
+        self.file_name = file_name  # '0' = free block, letter = file occupying
     
     def __str__(self):
         """Returns string representation of the block"""
-        if self.file_id == '0':
+        if self.file_name == '0':
             return f"Block {self.index}: Free"
         else:
-            return f"Block {self.index}: File '{self.file_id}'"
+            return f"Block {self.index}: File '{self.file_name}'"
+        
+    def get_file_name(self):
+        """Returns the file name of the block"""
+        return self.file_name
     
     def free(self):
         """Frees the block, making it available"""
-        self.file_id = '0'
+        self.file_name = '0'
     
-    def occupy(self, file_id):
+    def occupy(self, file_name):
         """Occupies the block with a specific file"""
-        if self.file_id != '0':
+        if self.file_name != '0':
             return False  # Block already occupied
-        self.file_id = file_id
+        self.file_name = file_name
         return True
 
 
@@ -53,7 +57,7 @@ class Disk:
     def is_free(self, index):
         """Checks if a block is free"""
         block = self.get_block(index)
-        return block is not None and block.file_id == '0'
+        return block is not None and block.file_name == '0'
     
     def occupy_block(self, index, file_id):
         """Occupies a specific block with a file"""
@@ -72,7 +76,7 @@ class Disk:
     
     def get_state(self):
         """Returns current disk state as a list"""
-        return [block.file_id for block in self.blocks]
+        return [block.file_name for block in self.blocks]
     
     def __str__(self):
         """Returns string representation of the disk"""

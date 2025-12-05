@@ -149,7 +149,7 @@ class FileSystem:
     def load_initial_state(self, initial_files: List[Tuple]) -> bool:
         """Loads initial disk state"""
         print("Loading initial disk state...")
-        
+        print(initial_files)
         file_id = 0
         for file_name, start_block, size in initial_files:
             # Check if blocks are within disk
@@ -172,8 +172,9 @@ class FileSystem:
             
             # Store file
             self.files[file_name] = file
-            i += 1
+            file_id += 1
         
+        self.next_id = file_id
         print(f"Initial state loaded: {len(initial_files)} files")
         return True
     
@@ -187,7 +188,7 @@ class FileSystem:
             if operation.is_creation():
                 # For creation, we need to generate a unique ID (letter)
                 # Based on the next numeric ID
-                file_id = chr(ord('A') + (self.next_id - 1) % 26)
+                file_id = self.next_id
                 self.next_id += 1
                 
                 self.create_file(operation.process_id, operation.file_name,
@@ -205,7 +206,7 @@ class FileSystem:
         # Legend
         print("\nLEGEND:")
         print("  0 = Free block")
-        print("  Letter = ID of file occupying the block")
+        print("  Letter = name of file occupying the block")
         print("-"*70)
         
         # Map configuration
@@ -222,49 +223,13 @@ class FileSystem:
             
             # Block values
             for i in range(start, end):
-                file_id = self.disk.get_block(i).file_id
-                print(f"{file_id:>2s}", end=" ")
-            
-            # File identification in this line
-            files_in_line = set()
-            for i in range(start, end):
-                file_id = self.disk.get_block(i).file_id
-                if file_id != '0':
-                    files_in_line.add(file_id)
-            
-            if files_in_line:
-                print("  [Files: ", end="")
-                for file_id in sorted(files_in_line):
-                    if file_id in self.files:
-                        name = self.files[file_id].name
-                        print(f"'{file_id}'({name})", end=" ")
-                    else:
-                        print(f"'{file_id}'(?)", end=" ")
-                print("]", end="")
-        
-        # Statistics
-        print("\n" + "-"*70)
-        state = self.disk.get_state()
-        free_blocks = state.count('0')
-        free_percent = (free_blocks / self.disk.total_blocks) * 100
-        
-        print(f"\nSTATISTICS:")
-        print(f"  Total blocks: {self.disk.total_blocks}")
-        print(f"  Free blocks: {free_blocks} ({free_percent:.1f}%)")
-        print(f"  Occupied blocks: {self.disk.total_blocks - free_blocks}")
-        print(f"  Total files: {len(self.files)}")
-        
-        # File list
-        if self.files:
-            print("\nFILES IN SYSTEM:")
-            for file_id, file in sorted(self.files.items()):
-                print(f"  • {file}")
-        
-        # Real-time processes
-        if self.real_time_processes:
-            print(f"\nREAL-TIME PROCESSES: {sorted(self.real_time_processes)}")
-        
-        print("="*70)
+                file_name = self.disk.get_block(i).get_file_name()
+                print(f"{file_name}", end=" ")
+
+            print("")
+
+        print("")
+        print("-"*70)
     
     def get_disk_state(self) -> List[str]:
         """Returns current disk state"""

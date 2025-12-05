@@ -1,6 +1,5 @@
 from simple_os.process.pcb import PCB, ProcState
 from simple_os.cpu import CPU
-from dataclasses import dataclass
 import typing
 
 # definition of what would be in a c module about the scheduler
@@ -102,12 +101,12 @@ class _Scheduler:
     offset: {proc.memory_offset}
     blocks: {proc.memory_num_allocated_blocks}
     priority: {proc.priority}
-    priority: {proc.starting_priority}
+    starting_priority: {proc.starting_priority}
     allocated_time: {exec_time}
     time_left: {proc.time_left}
-    scanners: {0 if proc.using_scanner else 1}
+    scanners: {1 if proc.using_scanner else 0}
     printers: {proc.requested_printer}
-    modems: {0 if proc.using_modem else 1}
+    modems: {1 if proc.using_modem else 0}
     sata: {proc.requested_sata}"""
         )
         CPU.execute(proc, exec_time, interrupted_at)

@@ -1,4 +1,4 @@
-from simple_os.memory.Memory import Memory
+from simple_os.memory.memory import Memory
 
 class _MemoryManager:
     def __init__(self):

@@ -1,5 +1,3 @@
-# This Python file uses the following encoding: utf-8
-
 class Memory:
     def __init__(self):
         self.total_blocks = 1024

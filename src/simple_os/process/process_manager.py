@@ -1,7 +1,7 @@
 from simple_os.process.pcb import PCB, ProcState, ProcBlockedReason
 from simple_os.process.scheduler import Scheduler
-from simple_os.memory.MemoryManager import MemoryManager
-from simple_os.resource.ResourceManager import ResourceManager
+from simple_os.memory.memory_manager import MemoryManager
+from simple_os.resource.resource_manager import ResourceManager
 import typing
 
 class _ProcessManager:
